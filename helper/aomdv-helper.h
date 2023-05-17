@@ -26,20 +26,19 @@
 #include "ns3/node-container.h"
 #include "ns3/ipv4-routing-helper.h"
 
-namespace ns3
-{
+namespace ns3 {
 /**
  * \ingroup aomdv
- * \brief Helper class that adds AOMDV routing to nodes.
+ * \brief Helper class that adds aomdv routing to nodes.
  */
 class AomdvHelper : public Ipv4RoutingHelper
 {
 public:
-  AomdvHelper();
+  AomdvHelper ();
 
   /**
-   * \returns pointer to clone of this OlsrHelper 
-   * 
+   * \returns pointer to clone of this AomdvHelper
+   *
    * \internal
    * This method is mainly for internal use by the other helpers;
    * clients are expected to free the dynamic memory allocated by this method
@@ -51,7 +50,7 @@ public:
    * \returns a newly-created routing protocol
    *
    * This method will be called by ns3::InternetStackHelper::Install
-   * 
+   *
    * \todo support installing AOMDV on the subset of all available IP interfaces
    */
   virtual Ptr<Ipv4RoutingProtocol> Create (Ptr<Node> node) const;
@@ -74,7 +73,7 @@ public:
    * \return the number of stream indices assigned by this helper
    */
   int64_t AssignStreams (NodeContainer c, int64_t stream);
-
+  uint32_t GetRoutingPacketCount();
 private:
   /** the factory to create AOMDV routing object */
   ObjectFactory m_agentFactory;
@@ -83,4 +82,3 @@ private:
 }
 
 #endif /* AOMDV_HELPER_H */
-

@@ -11,17 +11,17 @@ def build(bld):
         'model/aomdv-packet.cc',
         'model/aomdv-neighbor.cc',
         'model/aomdv-routing-protocol.cc',
-        'helper/aomdv-helper.cc', 
+        'helper/aomdv-helper.cc',
         ]
 
-    #aomdv_test = bld.create_ns3_module_test_library('aomdv')
-    #aomdv_test.source = [
-     #   'test/aomdv-id-cache-test-suite.cc',
-      #  'test/aomdv-test-suite.cc',
-       # 'test/aomdv-regression.cc',
-        #'test/bug-772.cc',
-        #'test/loopback.cc',
-        #]
+    aomdv_test = bld.create_ns3_module_test_library('aomdv')
+    aomdv_test.source = [
+        'test/aomdv-id-cache-test-suite.cc',
+        'test/aomdv-test-suite.cc',
+        'test/aomdv-regression.cc',
+        'test/bug-772.cc',
+        'test/loopback.cc',
+        ]
 
     headers = bld(features='ns3header')
     headers.module = 'aomdv'
@@ -39,5 +39,4 @@ def build(bld):
     if bld.env['ENABLE_EXAMPLES']:
         bld.recurse('examples')
 
-#    bld.ns3_python_bindings()
-
+    bld.ns3_python_bindings()

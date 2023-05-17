@@ -27,6 +27,8 @@
 namespace ns3
 {
 
+uint32_t aomdv::RoutingProtocol::m_RoutingPacketCount{0};
+
 AomdvHelper::AomdvHelper() : 
   Ipv4RoutingHelper ()
 {
@@ -56,6 +58,7 @@ AomdvHelper::Set (std::string name, const AttributeValue &value)
 int64_t
 AomdvHelper::AssignStreams (NodeContainer c, int64_t stream)
 {
+  
   int64_t currentStream = stream;
   Ptr<Node> node;
   for (NodeContainer::Iterator i = c.Begin (); i != c.End (); ++i)
@@ -90,8 +93,13 @@ AomdvHelper::AssignStreams (NodeContainer c, int64_t stream)
             }
         }
     }
+  
   return (currentStream - stream);
 }
 
+uint32_t 
+AomdvHelper::GetRoutingPacketCount()
+{
+  return(aomdv::RoutingProtocol::GetRoutingPacketCounts());
 }
-
+}

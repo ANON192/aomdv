@@ -1,43 +1,15 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/*
- * Copyright (c) 2009 IITP RAS
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation;
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * Based on
- *      NS-2 AOMDV model developed by the CMU/MONARCH group and optimized and
- *      tuned by Samir Das and Mahesh Marina, University of Cincinnati;
- *
- *      AOMDV-UU implementation by Erik Nordström of Uppsala University
- *      http://core.it.uu.se/core/index.php/AOMDV-UU
- *
- * Authors: Elena Buchatskaia <borovkovaes@iitp.ru>
- *          Pavel Boyko <boyko@iitp.ru>
- */
-
-#include "aomdv-neighbor.h"
-#include "ns3/log.h"
 #include <algorithm>
+#include "ns3/log.h"
+#include "ns3/wifi-mac-header.h"
+#include "aomdv-neighbor.h"
+
+namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("AomdvNeighbors");
 
-namespace ns3
-{
-namespace aomdv
-{
-Neighbors::Neighbors (Time delay) : 
-  m_ntimer (Timer::CANCEL_ON_DESTROY)
+namespace aomdv {
+Neighbors::Neighbors (Time delay)
+  : m_ntimer (Timer::CANCEL_ON_DESTROY)
 {
   m_ntimer.SetDelay (delay);
   m_ntimer.SetFunction (&Neighbors::Purge, this);
@@ -52,7 +24,9 @@ Neighbors::IsNeighbor (Ipv4Address addr)
        i != m_nb.end (); ++i)
     {
       if (i->m_neighborAddress == addr)
-        return true;
+        {
+          return true;
+        }
     }
   return false;
 }
@@ -65,7 +39,9 @@ Neighbors::GetExpireTime (Ipv4Address addr)
        != m_nb.end (); ++i)
     {
       if (i->m_neighborAddress == addr)
-        return (i->m_expireTime - Simulator::Now ());
+        {
+          return (i->m_expireTime - Simulator::Now ());
+        }
     }
   return Seconds (0);
 }
@@ -74,14 +50,18 @@ void
 Neighbors::Update (Ipv4Address addr, Time expire)
 {
   for (std::vector<Neighbor>::iterator i = m_nb.begin (); i != m_nb.end (); ++i)
-    if (i->m_neighborAddress == addr)
-      {
-        i->m_expireTime
-          = std::max (expire + Simulator::Now (), i->m_expireTime);
-        if (i->m_hardwareAddress == Mac48Address ())
-          i->m_hardwareAddress = LookupMacAddress (i->m_neighborAddress);
-        return;
-      }
+    {
+      if (i->m_neighborAddress == addr)
+        {
+          i->m_expireTime
+            = std::max (expire + Simulator::Now (), i->m_expireTime);
+          if (i->m_hardwareAddress == Mac48Address ())
+            {
+              i->m_hardwareAddress = LookupMacAddress (i->m_neighborAddress);
+            }
+          return;
+        }
+    }
 
   NS_LOG_LOGIC ("Open link to " << addr);
   Neighbor neighbor (addr, LookupMacAddress (addr), expire + Simulator::Now ());
@@ -89,8 +69,17 @@ Neighbors::Update (Ipv4Address addr, Time expire)
   Purge ();
 }
 
+/**
+ * \brief CloseNeighbor structure
+ */
 struct CloseNeighbor
 {
+  /**
+   * Check if the entry is expired
+   *
+   * \param nb Neighbors::Neighbor entry
+   * \return true if expired, false otherwise
+   */
   bool operator() (const Neighbors::Neighbor & nb) const
   {
     return ((nb.m_expireTime < Simulator::Now ()) || nb.close);
@@ -101,14 +90,15 @@ void
 Neighbors::Purge ()
 {
   if (m_nb.empty ())
-    return;
+    {
+      return;
+    }
 
   CloseNeighbor pred;
   if (!m_handleLinkFailure.IsNull ())
     {
       for (std::vector<Neighbor>::iterator j = m_nb.begin (); j != m_nb.end (); ++j)
         {
-    	  //
           if (pred (*j))
             {
               NS_LOG_LOGIC ("Close link to " << j->m_neighborAddress);
@@ -148,7 +138,7 @@ Neighbors::LookupMacAddress (Ipv4Address addr)
        i != m_arp.end (); ++i)
     {
       ArpCache::Entry * entry = (*i)->Lookup (addr);
-      if (entry != 0 && entry->IsAlive () && !entry->IsExpired ())
+      if (entry != 0 && (entry->IsAlive () || entry->IsPermanent ()) && !entry->IsExpired ())
         {
           hwaddr = Mac48Address::ConvertFrom (entry->GetMacAddress ());
           break;
@@ -165,11 +155,13 @@ Neighbors::ProcessTxError (WifiMacHeader const & hdr)
   for (std::vector<Neighbor>::iterator i = m_nb.begin (); i != m_nb.end (); ++i)
     {
       if (i->m_hardwareAddress == addr)
-        i->close = true;
+        {
+          i->close = true;
+        }
     }
   Purge ();
 }
-}
-}
 
+}  // namespace aomdv
+}  // namespace ns3
 

@@ -1,43 +1,15 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/*
- * Copyright (c) 2009 IITP RAS
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation;
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * Based on 
- *      NS-2 AOMDV model developed by the CMU/MONARCH group and optimized and
- *      tuned by Samir Das and Mahesh Marina, University of Cincinnati;
- * 
- *      AOMDV-UU implementation by Erik Nordström of Uppsala University
- *      http://core.it.uu.se/core/index.php/AOMDV-UU
- *
- * Authors: Elena Buchatskaia <borovkovaes@iitp.ru>
- *          Pavel Boyko <boyko@iitp.ru>
- */
 #include "aomdv-packet.h"
 #include "ns3/address-utils.h"
 #include "ns3/packet.h"
 
-namespace ns3
-{
-namespace aomdv
-{
+namespace ns3 {
+namespace aomdv {
 
 NS_OBJECT_ENSURE_REGISTERED (TypeHeader);
 
-TypeHeader::TypeHeader (MessageType t) :
-  m_type (t), m_valid (true)
+TypeHeader::TypeHeader (MessageType t)
+  : m_type (t),
+    m_valid (true)
 {
 }
 
@@ -46,6 +18,7 @@ TypeHeader::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::aomdv::TypeHeader")
     .SetParent<Header> ()
+    .SetGroupName ("Aomdv")
     .AddConstructor<TypeHeader> ()
   ;
   return tid;
@@ -140,9 +113,15 @@ operator<< (std::ostream & os, TypeHeader const & h)
 // RREQ
 //-----------------------------------------------------------------------------
 RreqHeader::RreqHeader (uint8_t flags, uint8_t reserved, uint8_t hopCount, uint32_t requestID, Ipv4Address dst,
-                        uint32_t dstSeqNo, Ipv4Address origin, uint32_t originSeqNo, Ipv4Address firstHop) :
-  m_flags (flags), m_reserved (reserved), m_hopCount (hopCount), m_requestID (requestID), m_dst (dst),
-  m_dstSeqNo (dstSeqNo), m_origin (origin),  m_originSeqNo (originSeqNo), m_firstHop (firstHop)
+                        uint32_t dstSeqNo, Ipv4Address origin, uint32_t originSeqNo)
+  : m_flags (flags),
+    m_reserved (reserved),
+    m_hopCount (hopCount),
+    m_requestID (requestID),
+    m_dst (dst),
+    m_dstSeqNo (dstSeqNo),
+    m_origin (origin),
+    m_originSeqNo (originSeqNo)
 {
 }
 
@@ -153,6 +132,7 @@ RreqHeader::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::aomdv::RreqHeader")
     .SetParent<Header> ()
+    .SetGroupName ("Aomdv")
     .AddConstructor<RreqHeader> ()
   ;
   return tid;
@@ -167,7 +147,7 @@ RreqHeader::GetInstanceTypeId () const
 uint32_t
 RreqHeader::GetSerializedSize () const
 {
-  return 27;                            //Read the source code
+  return 23;
 }
 
 void
@@ -181,7 +161,6 @@ RreqHeader::Serialize (Buffer::Iterator i) const
   i.WriteHtonU32 (m_dstSeqNo);
   WriteTo (i, m_origin);
   i.WriteHtonU32 (m_originSeqNo);
-  WriteTo (i, m_firstHop);
 }
 
 uint32_t
@@ -196,7 +175,6 @@ RreqHeader::Deserialize (Buffer::Iterator start)
   m_dstSeqNo = i.ReadNtohU32 ();
   ReadFrom (i, m_origin);
   m_originSeqNo = i.ReadNtohU32 ();
-  ReadFrom (i, m_firstHop);
 
   uint32_t dist = i.GetDistanceFrom (start);
   NS_ASSERT (dist == GetSerializedSize ());
@@ -208,8 +186,8 @@ RreqHeader::Print (std::ostream &os) const
 {
   os << "RREQ ID " << m_requestID << " destination: ipv4 " << m_dst
      << " sequence number " << m_dstSeqNo << " source: ipv4 "
-     << m_origin << " sequence number " << m_originSeqNo << " first hop " << m_firstHop
-     << " flags:" << " Gratuitous RREP " << (*this).GetGratiousRrep ()
+     << m_origin << " sequence number " << m_originSeqNo
+     << " flags:" << " Gratuitous RREP " << (*this).GetGratuitousRrep ()
      << " Destination only " << (*this).GetDestinationOnly ()
      << " Unknown sequence number " << (*this).GetUnknownSeqno ();
 }
@@ -222,16 +200,20 @@ operator<< (std::ostream & os, RreqHeader const & h)
 }
 
 void
-RreqHeader::SetGratiousRrep (bool f)
+RreqHeader::SetGratuitousRrep (bool f)
 {
   if (f)
-    m_flags |= (1 << 5);
+    {
+      m_flags |= (1 << 5);
+    }
   else
-    m_flags &= ~(1 << 5);
+    {
+      m_flags &= ~(1 << 5);
+    }
 }
 
 bool
-RreqHeader::GetGratiousRrep () const
+RreqHeader::GetGratuitousRrep () const
 {
   return (m_flags & (1 << 5));
 }
@@ -240,9 +222,13 @@ void
 RreqHeader::SetDestinationOnly (bool f)
 {
   if (f)
-    m_flags |= (1 << 4);
+    {
+      m_flags |= (1 << 4);
+    }
   else
-    m_flags &= ~(1 << 4);
+    {
+      m_flags &= ~(1 << 4);
+    }
 }
 
 bool
@@ -255,9 +241,13 @@ void
 RreqHeader::SetUnknownSeqno (bool f)
 {
   if (f)
-    m_flags |= (1 << 3);
+    {
+      m_flags |= (1 << 3);
+    }
   else
-    m_flags &= ~(1 << 3);
+    {
+      m_flags &= ~(1 << 3);
+    }
 }
 
 bool
@@ -269,10 +259,10 @@ RreqHeader::GetUnknownSeqno () const
 bool
 RreqHeader::operator== (RreqHeader const & o) const
 {
-  return (m_flags == o.m_flags && m_reserved == o.m_reserved &&
-          m_hopCount == o.m_hopCount && m_requestID == o.m_requestID &&
-          m_dst == o.m_dst && m_dstSeqNo == o.m_dstSeqNo &&
-          m_origin == o.m_origin && m_originSeqNo == o.m_originSeqNo && m_firstHop == o.m_firstHop);
+  return (m_flags == o.m_flags && m_reserved == o.m_reserved
+          && m_hopCount == o.m_hopCount && m_requestID == o.m_requestID
+          && m_dst == o.m_dst && m_dstSeqNo == o.m_dstSeqNo
+          && m_origin == o.m_origin && m_originSeqNo == o.m_originSeqNo);
 }
 
 //-----------------------------------------------------------------------------
@@ -280,9 +270,13 @@ RreqHeader::operator== (RreqHeader const & o) const
 //-----------------------------------------------------------------------------
 
 RrepHeader::RrepHeader (uint8_t prefixSize, uint8_t hopCount, Ipv4Address dst,
-                        uint32_t dstSeqNo, Ipv4Address origin, uint32_t requestID, Ipv4Address firstHop, Time lifeTime) :
-  m_flags (0), m_prefixSize (prefixSize), m_hopCount (hopCount),
-  m_dst (dst), m_dstSeqNo (dstSeqNo), m_origin (origin), m_requestID (requestID), m_firstHop (firstHop)
+                        uint32_t dstSeqNo, Ipv4Address origin, Time lifeTime)
+  : m_flags (0),
+    m_prefixSize (prefixSize),
+    m_hopCount (hopCount),
+    m_dst (dst),
+    m_dstSeqNo (dstSeqNo),
+    m_origin (origin)
 {
   m_lifeTime = uint32_t (lifeTime.GetMilliSeconds ());
 }
@@ -294,6 +288,7 @@ RrepHeader::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::aomdv::RrepHeader")
     .SetParent<Header> ()
+    .SetGroupName ("Aomdv")
     .AddConstructor<RrepHeader> ()
   ;
   return tid;
@@ -308,7 +303,7 @@ RrepHeader::GetInstanceTypeId () const
 uint32_t
 RrepHeader::GetSerializedSize () const
 {
-  return 27;
+  return 19;
 }
 
 void
@@ -320,8 +315,6 @@ RrepHeader::Serialize (Buffer::Iterator i) const
   WriteTo (i, m_dst);
   i.WriteHtonU32 (m_dstSeqNo);
   WriteTo (i, m_origin);
-  i.WriteHtonU32 (m_requestID);
-  WriteTo (i, m_firstHop);
   i.WriteHtonU32 (m_lifeTime);
 }
 
@@ -336,8 +329,6 @@ RrepHeader::Deserialize (Buffer::Iterator start)
   ReadFrom (i, m_dst);
   m_dstSeqNo = i.ReadNtohU32 ();
   ReadFrom (i, m_origin);
-  m_requestID = i.ReadNtohU32 ();
-  ReadFrom (i, m_firstHop);
   m_lifeTime = i.ReadNtohU32 ();
 
   uint32_t dist = i.GetDistanceFrom (start);
@@ -348,7 +339,7 @@ RrepHeader::Deserialize (Buffer::Iterator start)
 void
 RrepHeader::Print (std::ostream &os) const
 {
-  os << "destination: ipv4 " << m_dst << " sequence number " << m_dstSeqNo << " Request ID " << m_requestID << " first hop " << m_firstHop;
+  os << "destination: ipv4 " << m_dst << " sequence number " << m_dstSeqNo;
   if (m_prefixSize != 0)
     {
       os << " prefix size " << m_prefixSize;
@@ -374,9 +365,13 @@ void
 RrepHeader::SetAckRequired (bool f)
 {
   if (f)
-    m_flags |= (1 << 6);
+    {
+      m_flags |= (1 << 6);
+    }
   else
-    m_flags &= ~(1 << 6);
+    {
+      m_flags &= ~(1 << 6);
+    }
 }
 
 bool
@@ -400,13 +395,13 @@ RrepHeader::GetPrefixSize () const
 bool
 RrepHeader::operator== (RrepHeader const & o) const
 {
-  return (m_flags == o.m_flags && m_prefixSize == o.m_prefixSize &&
-          m_hopCount == o.m_hopCount && m_dst == o.m_dst && m_dstSeqNo == o.m_dstSeqNo &&
-          m_origin == o.m_origin && m_requestID == o.m_requestID && m_firstHop == o.m_firstHop && m_lifeTime == o.m_lifeTime);
+  return (m_flags == o.m_flags && m_prefixSize == o.m_prefixSize
+          && m_hopCount == o.m_hopCount && m_dst == o.m_dst && m_dstSeqNo == o.m_dstSeqNo
+          && m_origin == o.m_origin && m_lifeTime == o.m_lifeTime);
 }
 
 void
-RrepHeader::SetHello (Ipv4Address origin, uint32_t srcSeqNo, Time lifetime)                     //Read source code *
+RrepHeader::SetHello (Ipv4Address origin, uint32_t srcSeqNo, Time lifetime)
 {
   m_flags = 0;
   m_prefixSize = 0;
@@ -414,8 +409,6 @@ RrepHeader::SetHello (Ipv4Address origin, uint32_t srcSeqNo, Time lifetime)     
   m_dst = origin;
   m_dstSeqNo = srcSeqNo;
   m_origin = origin;
-  m_requestID = 0;
-  //m_firstHop =  
   m_lifeTime = lifetime.GetMilliSeconds ();
 }
 
@@ -430,18 +423,19 @@ operator<< (std::ostream & os, RrepHeader const & h)
 // RREP-ACK
 //-----------------------------------------------------------------------------
 
-RrepAckHeader::RrepAckHeader () :
-  m_reserved (0)
+RrepAckHeader::RrepAckHeader ()
+  : m_reserved (0)
 {
 }
 
 NS_OBJECT_ENSURE_REGISTERED (RrepAckHeader);
-  
+
 TypeId
 RrepAckHeader::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::aomdv::RrepAckHeader")
     .SetParent<Header> ()
+    .SetGroupName ("Aomdv")
     .AddConstructor<RrepAckHeader> ()
   ;
   return tid;
@@ -496,8 +490,9 @@ operator<< (std::ostream & os, RrepAckHeader const & h )
 //-----------------------------------------------------------------------------
 // RERR
 //-----------------------------------------------------------------------------
-RerrHeader::RerrHeader () :
-  m_flag (0), m_reserved (0)
+RerrHeader::RerrHeader ()
+  : m_flag (0),
+    m_reserved (0)
 {
 }
 
@@ -508,6 +503,7 @@ RerrHeader::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::aomdv::RerrHeader")
     .SetParent<Header> ()
+    .SetGroupName ("Aomdv")
     .AddConstructor<RerrHeader> ()
   ;
   return tid;
@@ -522,7 +518,7 @@ RerrHeader::GetInstanceTypeId () const
 uint32_t
 RerrHeader::GetSerializedSize () const
 {
-  return (3 + 8 * GetDestCount ()) + 4 + 4;
+  return (3 + 8 * GetDestCount ());
 }
 
 void
@@ -537,8 +533,6 @@ RerrHeader::Serialize (Buffer::Iterator i ) const
       WriteTo (i, (*j).first);
       i.WriteHtonU32 ((*j).second);
     }
-  WriteTo(i, m_initsrc);
-  i.WriteU32(init_seq);
 }
 
 uint32_t
@@ -557,8 +551,7 @@ RerrHeader::Deserialize (Buffer::Iterator start )
       seqNo = i.ReadNtohU32 ();
       m_unreachableDstSeqNo.insert (std::make_pair (address, seqNo));
     }
-  ReadFrom (i, m_initsrc);
-  init_seq = i.ReadU32();
+
   uint32_t dist = i.GetDistanceFrom (start);
   NS_ASSERT (dist == GetSerializedSize ());
   return dist;
@@ -580,9 +573,13 @@ void
 RerrHeader::SetNoDelete (bool f )
 {
   if (f)
-    m_flag |= (1 << 0);
+    {
+      m_flag |= (1 << 0);
+    }
   else
-    m_flag &= ~(1 << 0);
+    {
+      m_flag &= ~(1 << 0);
+    }
 }
 
 bool
@@ -595,7 +592,9 @@ bool
 RerrHeader::AddUnDestination (Ipv4Address dst, uint32_t seqNo )
 {
   if (m_unreachableDstSeqNo.find (dst) != m_unreachableDstSeqNo.end ())
-    return true;
+    {
+      return true;
+    }
 
   NS_ASSERT (GetDestCount () < 255); // can't support more than 255 destinations in single RERR
   m_unreachableDstSeqNo.insert (std::make_pair (dst, seqNo));
@@ -606,7 +605,9 @@ bool
 RerrHeader::RemoveUnDestination (std::pair<Ipv4Address, uint32_t> & un )
 {
   if (m_unreachableDstSeqNo.empty ())
-    return false;
+    {
+      return false;
+    }
   std::map<Ipv4Address, uint32_t>::iterator i = m_unreachableDstSeqNo.begin ();
   un = *i;
   m_unreachableDstSeqNo.erase (i);
@@ -621,40 +622,22 @@ RerrHeader::Clear ()
   m_reserved = 0;
 }
 
-
-bool RerrHeader::IsExist(Ipv4Address id)
-{
-	std::map<Ipv4Address, uint32_t>::iterator i;
-	 i = m_unreachableDstSeqNo.find(id);
-	 if(i == m_unreachableDstSeqNo.end())
-	 {
-		 return false;
-	 }
-	 return true;
-}
-
-void RerrHeader::SetAddressSeq(Ipv4Address id, uint32_t seq)
-{
-	NS_ASSERT(IsExist(id) == true);
-	std::map<Ipv4Address, uint32_t>::iterator i;
-	i = m_unreachableDstSeqNo.find(id);
-	if(i->second < seq)
-	{
-		i->second = seq;
-	}
-}
 bool
 RerrHeader::operator== (RerrHeader const & o ) const
 {
   if (m_flag != o.m_flag || m_reserved != o.m_reserved || GetDestCount () != o.GetDestCount ())
-    return false;
+    {
+      return false;
+    }
 
   std::map<Ipv4Address, uint32_t>::const_iterator j = m_unreachableDstSeqNo.begin ();
   std::map<Ipv4Address, uint32_t>::const_iterator k = o.m_unreachableDstSeqNo.begin ();
   for (uint8_t i = 0; i < GetDestCount (); ++i)
     {
       if ((j->first != k->first) || (j->second != k->second))
-        return false;
+        {
+          return false;
+        }
 
       j++;
       k++;
@@ -670,4 +653,3 @@ operator<< (std::ostream & os, RerrHeader const & h )
 }
 }
 }
-
